@@ -1,0 +1,5 @@
+if len(self.points)!=0:
+            a=np.matmul(self.points,self.matrix_sys_coord)
+            a=a/a[:,-1][:,None]
+            for row in a:
+                print("x=",row[0],"y=", row[0])
