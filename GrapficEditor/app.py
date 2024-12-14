@@ -188,7 +188,7 @@ class App:
         for point in points:
             self.points[point]=A_matrix[point]
     
-    def get_matrix_tk(self,default_values): 
+    def get_matrix_tk1(self,default_values): 
         
         def save_values():
             values = []
@@ -277,7 +277,99 @@ class App:
         root.grab_set()
         self.root=root
         
-        
+    def get_matrix_tk(self, default_values):
+        def save_values():
+            values = []
+            for row in entries:
+                row_values = []
+                for entry in row:
+                    row_values.append(float(entry.get()))
+                values.append(row_values)
+            self.projected_matrix = np.array(values)
+            self.M_edit(self.selected_points, self.projected_matrix)
+            root.destroy()
+            self.root = None
+
+        def reset_values():
+            for i in range(4):
+                for j in range(4):
+                    entries[i][j].delete(0, tk.END)
+                    entries[i][j].insert(0, self.projected_matrix[i, j])
+
+        def validate_input(P):
+            return P.replace('.', '', 1).replace('-', '', 1).isdigit() or P == "" or P == "-" or P == "."
+
+        root = tk.Tk()
+        root.title("Измените матрицу для преобразования")
+        root.geometry(f"500x300+{int(WIDTH / 2)}+{int(HEIGHT / 2)}")
+        root.configure(bg="#f0f0f0")
+
+        entries = []
+        if default_values is None:
+            default_values = np.array([
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]
+            ])
+        vcmd = (root.register(validate_input), '%P')
+
+        matrix_frame = tk.Frame(root, bg="#f0f0f0")
+        matrix_frame.pack(pady=20)
+
+        for i in range(4):
+            row = []
+            for j in range(4):
+                entry = tk.Entry(matrix_frame, width=5, validate="key", vcmd=vcmd, font=("Arial", 12))
+                entry.grid(row=i, column=j, padx=5, pady=5)
+                entry.insert(0, default_values[i, j])
+                row.append(entry)
+            entries.append(row)
+
+        button_frame = tk.Frame(root, bg="#f0f0f0")
+        button_frame.pack(pady=10)
+        button_frame1 = tk.Frame(root, bg="#f0f0f0")
+        button_frame1.pack(pady=10)
+        save_button = tk.Button(button_frame, text="Сохранить", command=save_values, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
+        save_button.pack(side=tk.LEFT, padx=10)
+
+        reset_button = tk.Button(button_frame, text="Сбросить", command=reset_values, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
+        reset_button.pack(side=tk.LEFT, padx=10)
+
+        mode_var = tk.StringVar()
+        mode_var.set(list(self.projected_mode.keys())[0])
+
+        mode_menu = tk.OptionMenu(button_frame1, mode_var, *self.projected_mode.keys())
+        mode_menu.pack(side=tk.LEFT, padx=10)
+
+        def switch_mode():
+            if self.mode == "create":
+                self.mode = "edit1"
+                mode_button.config(text="Редактировать")
+                print("Режим редактирования")
+            else:
+                self.mode = "create"
+                mode_button.config(text="Создать")
+                print("Режим создания")
+
+        mode_button = tk.Button(button_frame, text="Создать", command=switch_mode, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
+        mode_button.pack(pady=5)
+
+        def apply_mode():
+            mode = mode_var.get()
+            print(f"Выбран режим: {mode}")
+            print(self.projected_mode[mode])
+            self.projected_matrix = self.projected_mode[mode]
+            reset_values()
+
+        apply_button = tk.Button(button_frame1, text="Применить", command=apply_mode, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
+        apply_button.pack()
+
+        root.grab_set()
+        self.root = root
+    
+    
+       
     def M_edit(self,points,matrix):
         if points is None:
             if self.points.shape[0]>0:
