@@ -9,8 +9,13 @@ class Line:
     def line_length(x1, y1, x2, y2):
         return ((x1-x2)**2+(y1-y2)**2)**0.5
 
-    def equation(self):
-        A = self.y2 - self.y1
-        B = self.x1 - self.x2
-        C = (self.x2 - WIDTH // 2) * (HEIGHT // 2 - self.y1) - (self.x1 - WIDTH // 2) * (HEIGHT // 2 - self.y1)
-        return f"{(A- 2*(WIDTH // 2))}x + {(2*(HEIGHT // 2)-B)}y + {C} = 0"
+    def equation(x1,y1,x2,y2,mod):
+        A = y2 - y1
+        B = x1 - x2
+        C = (x2  ) * (y1) - (x1) * (y1)
+        
+        A = y2 - y1
+        B = x1 - x2
+        C = x2 * y1 - x1 * y2
+        
+        return f"{round(A,1)}{mod[0]} + {(round(B,1))}{mod[1]} + {round(C,1)} = 0"
