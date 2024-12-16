@@ -1325,42 +1325,6 @@ class App:
         self.selected_lines=selected_lines
         print(selected_lines)    
 
-    
-        self.selected_line = None
-        self.selected_point= None
-        self.status = ""
-        for line in self.lines:
-            if Point.get_d(pos, line) < 5 and (((line.x1<=pos[0]<=line.x2) or (line.x1>=pos[0]>=line.x2)) and ((line.y1<=pos[1]<=line.y2)or (line.y1>=pos[1]>=line.y2))):
-                self.selected_line = line
-                self.status = self.selected_line.equation() + "   "
-            elif self.selected_line!= None:
-                self.selected_line = self.selected_line
-                self.status = self.selected_line.equation() + "   "
-
-        else:
-            if self.points!=None:
-                for point in self.points:
-                    if math.hypot(point[0] - pos[0], point[1] - pos[1]) < 5:
-                        self.selected_point = point                    
-                        break
-            if self.show_coords:
-                if (pos[0]%(CELL_HEIGHT/self.scale)<=(CELL_HEIGHT/self.scale)/20 or (CELL_HEIGHT/self.scale)-pos[0]%(CELL_HEIGHT/self.scale)<=(CELL_HEIGHT/self.scale)/20) and (pos[0]%(CELL_HEIGHT/self.scale)<=(CELL_HEIGHT/self.scale)/20 or (CELL_HEIGHT/self.scale)-pos[0]%(CELL_HEIGHT/self.scale)<=(CELL_HEIGHT/self.scale)/20): 
-                    self.selected_point = Point((round((pos[0])))*(CELL_HEIGHT/self.scale),(round(pos[1]))*(CELL_HEIGHT/self.scale))
-        
-        if self.selected_point!=None:
-            self.status += self.selected_point.coordinates() + "   "
-                    
-
-        if self.points.shape[0] > 0:
-            for point in self.points:
-                pygame.draw.circle(self.screen, BLACK, (point[0], point[1]), 5)
-                
-            self.edit_point = Point(pos[0], pos[1])
-        elif self.edit_point!= None:
-            self.edit_point = self.edit_point
-
-        self.curspos = f"({(pos[0] - WIDTH // 2) } ; {(HEIGHT // 2 - pos[1]) })  "+f"({(pos[0]) } ; {(pos[1]) })"
-    
     def update_sys_coord(self):
         self.canvas_coords=np.matmul(self.point_sys_coord,self.matrix_sys_coord)
         self.canvas_coords=self.canvas_coords/self.canvas_coords[:,-1][:,None]
