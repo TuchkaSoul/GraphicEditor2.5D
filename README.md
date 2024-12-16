@@ -1,6 +1,3 @@
-README
-markdown
-Копировать код
 # Simplex Graphics Application
 
 ## Описание
