@@ -12,7 +12,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 CREY=(0,0,255)
 CELL_HEIGHT=1000
-FPS=60
+FPS=144
 class App:
     def __init__(self):
         pygame.init()        
@@ -162,155 +162,7 @@ class App:
         ave_point[2]/=self.points.shape[0]
         return ave_point 
 
-    def get_matrix_tk(self, default_values):
-        def save_values():
-            values = []
-            for row in entries:
-                row_values = []
-                for entry in row:
-                    row_values.append(float(entry.get()))
-                values.append(row_values)
-            self.projected_matrix = np.array(values)
-            self.M_edit(self.selected_points, self.projected_matrix)
-            self.root.destroy()
-            self.root = None
-            self.root_closed = True
-
-        def reset_values():
-            for i in range(4):
-                for j in range(4):
-                    entries[i][j].delete(0, tk.END)
-                    entries[i][j].insert(0, self.projected_matrix[i, j])
-
-        def validate_input(P):
-            return P.replace('.', '', 1).replace('-', '', 1).isdigit() or P == "" or P == "-" or P == "."
-
-        self.root = tk.Tk()
-        self.root.title("Измените матрицу для преобразования")
-        self.root.geometry(f"500x500+{int(WIDTH / 2)}+{int(HEIGHT / 2)}")
-        self.root.configure(bg="#f0f0f0")
-
-        entries = []
-        if default_values is None:
-            default_values = np.array([
-                [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1]
-            ])
-        vcmd = (self.root.register(validate_input), '%P')
-
-        matrix_frame = tk.Frame(self.root, bg="#f0f0f0")
-        matrix_frame.pack(pady=20)
-
-        for i in range(4):
-            row = []
-            for j in range(4):
-                entry = tk.Entry(matrix_frame, width=5, validate="key", vcmd=vcmd, font=("Arial", 12))
-                entry.grid(row=i, column=j, padx=5, pady=5)
-                entry.insert(0, default_values[i, j])
-                row.append(entry)
-            entries.append(row)
-
-        button_frame = tk.Frame(self.root, bg="#f0f0f0")
-        button_frame.pack(pady=10)
-        button_frame1 = tk.Frame(self.root, bg="#f0f0f0")
-        button_frame1.pack(pady=10)
-
-        save_button = tk.Button(button_frame, text="Сохранить", command=save_values, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        save_button.pack(side=tk.LEFT, padx=10)
-
-        reset_button = tk.Button(button_frame, text="Сбросить", command=reset_values, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        reset_button.pack(side=tk.LEFT, padx=10)
-
-        mode_var = tk.StringVar()
-        mode_var.set(list(self.projected_mode.keys())[0])
-
-        mode_menu = tk.OptionMenu(button_frame1, mode_var, *self.projected_mode.keys())
-        mode_menu.pack(side=tk.LEFT, padx=10)
-
-        def switch_mode():
-            if self.mode == "create":
-                self.mode = "edit1"
-                mode_button.config(text="Редактировать")
-                print("Режим редактирования")
-            else:
-                self.mode = "create"
-                mode_button.config(text="Создать")
-                print("Режим создания")
-
-        mode_button = tk.Button(button_frame, text="Создать", command=switch_mode, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        mode_button.pack(pady=5)
-
-        def apply_mode():
-            mode = mode_var.get()
-            print(f"Выбран режим: {mode}")
-            print(self.projected_mode[mode])
-            self.projected_matrix = self.projected_mode[mode]
-            self.update_projection_matrix()
-            reset_values()
-            
-
-        apply_button = tk.Button(button_frame1, text="Применить", command=apply_mode, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        apply_button.pack()
-
-        # Интерфейс для ввода угла поворота и выбора оси поворота
-        rotation_frame = tk.Frame(self.root, bg="#f0f0f0")
-        rotation_frame.pack(pady=10)
-
-        angle_label = tk.Label(rotation_frame, text="Угол поворота:", font=("Arial", 12), bg="#f0f0f0")
-        angle_label.pack(side=tk.LEFT, padx=5)
-
-        angle_entry = tk.Entry(rotation_frame, width=5, validate="key", vcmd=vcmd, font=("Arial", 12))
-        angle_entry.pack(side=tk.LEFT, padx=5)
-
-        axis_var = tk.StringVar()
-        axis_var.set("X")
-
-        axis_menu = tk.OptionMenu(rotation_frame, axis_var, "X", "Y", "Z")
-        axis_menu.pack(side=tk.LEFT, padx=5)
-
-        def apply_rotation():
-            angle = float(angle_entry.get())
-            axis = axis_var.get()
-            if axis == "X":
-                self.pitch += angle
-            elif axis == "Y":
-                self.yaw += angle
-            elif axis == "Z":
-                self.roll += angle
-            self.update_projection_matrix()
-
-        rotate_button = tk.Button(rotation_frame, text="Повернуть", command=apply_rotation, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        rotate_button.pack(side=tk.LEFT, padx=10)
-
-        # Интерфейс для ввода точки схода
-        eye_frame = tk.Frame(self.root, bg="#f0f0f0")
-        eye_frame.pack(pady=10)
-
-        eye_label = tk.Label(eye_frame, text="Точка схода (X, Y, Z):", font=("Arial", 12), bg="#f0f0f0")
-        eye_label.pack(side=tk.LEFT, padx=5)
-
-        eye_entries = []
-        for i in range(3):
-            entry = tk.Entry(eye_frame, width=5, validate="key", vcmd=vcmd, font=("Arial", 12))
-            entry.pack(side=tk.LEFT, padx=5)
-            entry.insert(0, self.eye[i])
-            eye_entries.append(entry)
-
-        def apply_eye():
-            self.eye = np.array([float(entry.get()) for entry in eye_entries])
-            self.update_projection_matrix()
-
-        apply_eye_button = tk.Button(eye_frame, text="Применить", command=apply_eye, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        apply_eye_button.pack(side=tk.LEFT, padx=10)
-
-        # Обработка события закрытия окна
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        
-        self.root.update()
-        
+      
     def on_close(self):
         self.root.destroy()
         self.root = None
@@ -468,186 +320,6 @@ class App:
         root.grab_set()
         self.root = root
     
-    def get_matrix_tk1(self,default_values): 
-        
-        def save_values():
-            values = []
-            for row in entries:
-                row_values = []
-                for entry in row:
-                    row_values.append(float(entry.get()))
-                values.append(row_values)
-            self.projected_matrix=np.array(values)
-            self.M_edit(self.selected_points,self.projected_matrix)
-            root.destroy()
-            self.root=None
-            
-
-        def reset_values():
-            
-            for i in range(4):
-                for j in range(4):
-                    entries[i][j].delete(0, tk.END)
-                    entries[i][j].insert(0, self.projected_matrix[i,j])
-        
-        
-        
-        def validate_input(P):
-            return P.replace('.', '', 1).replace('-', '', 1).isdigit() or P == "" or P == "-" or P == "."       
-        root=tk.Tk()
-        root.title("Измените матрицу для преобразования")# устанавливаем заголовок окна
-        root.geometry(f"300x{300}+{int(WIDTH/2)}+{int(HEIGHT/2)}")
-        entries = []
-        if default_values is None:
-            default_values = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-        vcmd = (root.register(validate_input), '%P')
-        for i in range(4):
-            row = []
-            for j in range(4):
-                entry = tk.Entry(root, width=5,validate="key",vcmd=vcmd)
-                entry.grid(row=i, column=j)
-                entry.insert(0, default_values[i][j])
-                row.append(entry)
-            entries.append(row)
-            
-        button_frame = tk.Frame(root)
-        button_frame.grid(row=4, column=0, columnspan=4)
-        button_frame1 = tk.Frame(root)
-        button_frame1.grid(row=5, column=0, columnspan=4)
-        save_button = tk.Button(button_frame, text="Сохранить", command=save_values)
-        save_button.pack(side=tk.LEFT)
-
-        reset_button = tk.Button(button_frame, text="Сбросить", command=reset_values)
-        reset_button.pack(side=tk.LEFT) 
-        
-        mode_var = tk.StringVar()
-        mode_var.set(list(self.projected_mode.keys())[0])  # default value
-
-        mode_menu = tk.OptionMenu(button_frame, mode_var, *self.projected_mode.keys())
-        mode_menu.pack(side=tk.LEFT)
-        
-        def switch_mode():
-            if self.mode == "create":
-                self.mode = "edit1"
-                mode_button.config(text="Редактировать")
-                # код для режима редактирования
-                print("Режим редактирования")
-            else:
-                self.mode = "create"
-                mode_button.config(text="Создать")
-                # код для режима создания
-                print("Режим создания") 
-        mode_button = tk.Button(button_frame1, text="Создать", command=switch_mode)
-        mode_button.pack(side=tk.LEFT)
-
-        def apply_mode():
-            mode = mode_var.get()
-            print(f"Выбран режим: {mode}")
-            print(self.projected_mode[mode])
-            self.projected_matrix=self.projected_mode[mode]            
-            reset_values()
-            
-        self.button = tk.Button(button_frame, text="Применить", command=apply_mode)
-        self.button.pack()  
-        root.grab_set()
-        self.root=root
-        
-    def get_matrix_tk2(self, default_values):
-        def save_values():
-            values = []
-            for row in entries:
-                row_values = []
-                for entry in row:
-                    row_values.append(float(entry.get()))
-                values.append(row_values)
-            self.projected_matrix = np.array(values)
-            self.M_edit(self.selected_points, self.projected_matrix)
-            root.destroy()
-            self.root = None
-
-        def reset_values():
-            for i in range(4):
-                for j in range(4):
-                    entries[i][j].delete(0, tk.END)
-                    entries[i][j].insert(0, self.projected_matrix[i, j])
-
-        def validate_input(P):
-            return P.replace('.', '', 1).replace('-', '', 1).isdigit() or P == "" or P == "-" or P == "."
-
-        root = tk.Tk()
-        root.title("Измените матрицу для преобразования")
-        root.geometry(f"500x300+{int(WIDTH / 2)}+{int(HEIGHT / 2)}")
-        root.configure(bg="#f0f0f0")
-
-        entries = []
-        if default_values is None:
-            default_values = np.array([
-                [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1]
-            ])
-        vcmd = (root.register(validate_input), '%P')
-
-        matrix_frame = tk.Frame(root, bg="#f0f0f0")
-        matrix_frame.pack(pady=20)
-
-        for i in range(4):
-            row = []
-            for j in range(4):
-                entry = tk.Entry(matrix_frame, width=5, validate="key", vcmd=vcmd, font=("Arial", 12))
-                entry.grid(row=i, column=j, padx=5, pady=5)
-                entry.insert(0, default_values[i, j])
-                row.append(entry)
-            entries.append(row)
-
-        button_frame = tk.Frame(root, bg="#f0f0f0")
-        button_frame.pack(pady=10)
-        button_frame1 = tk.Frame(root, bg="#f0f0f0")
-        button_frame1.pack(pady=10)
-        save_button = tk.Button(button_frame, text="Сохранить", command=save_values, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        save_button.pack(side=tk.LEFT, padx=10)
-
-        reset_button = tk.Button(button_frame, text="Сбросить", command=reset_values, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        reset_button.pack(side=tk.LEFT, padx=10)
-
-        mode_var = tk.StringVar()
-        mode_var.set(list(self.projected_mode.keys())[0])
-
-        mode_menu = tk.OptionMenu(button_frame1, mode_var, *self.projected_mode.keys())
-        mode_menu.pack(side=tk.LEFT, padx=10)
-
-        def switch_mode():
-            if self.mode == "create":
-                self.mode = "edit1"
-                mode_button.config(text="Редактировать")
-                print("Режим редактирования")
-            else:
-                self.mode = "create"
-                mode_button.config(text="Создать")
-                print("Режим создания")
-
-        mode_button = tk.Button(button_frame, text="Создать", command=switch_mode, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        mode_button.pack(pady=5)
-
-        def apply_mode():
-            mode = mode_var.get()
-            print(f"Выбран режим: {mode}")
-            print(self.projected_mode[mode])
-            self.projected_matrix = self.projected_mode[mode]
-            reset_values()
-
-        apply_button = tk.Button(button_frame1, text="Применить", command=apply_mode, font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
-        apply_button.pack()
-
-        root.grab_set()
-        self.root = root
-       
     def M_edit(self,points,matrix):
         if points is None:
             if self.points.shape[0]>0:
@@ -661,7 +333,6 @@ class App:
             else:
                 A_matrix=np.append(A_matrix,[self.canvas_points[point]],axis=0)                
 
-        
         if A_matrix.shape[0]>0:
             A_matrix=np.matmul(A_matrix,matrix)
             A_matrix=A_matrix/A_matrix[:,-1][:,None]
@@ -860,6 +531,7 @@ class App:
                 for value_element in line_element:
                     line.append(int(value_element.text))
                 self.lines.append(line)
+    
     def load_lines_from_file(self, filename):
         """
         Загружает список кортежей из файла в формате TXT.
@@ -1253,7 +925,7 @@ class App:
         save_button = tk.Button(save_frame, text="Сохранить", command=lambda:save_file(self.filename), font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
         save_button.pack(side=tk.LEFT, padx=5)
 
-        tk.Button(save_frame, text="Обзор", command=lambda:save_file, font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+        tk.Button(save_frame, text="Обзор", command=save_file, font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
 
         # Block 3: Load File
         load_frame = tk.Frame(root, bg="#f0f0f0", padx=10, pady=10)
@@ -1262,7 +934,7 @@ class App:
         load_button = tk.Button(load_frame, text="Загрузить", command=lambda:load_file(self.filename), font=("Arial", 12), bg="#4CAF50", fg="#ffffff")
         load_button.pack(side=tk.LEFT, padx=5)
 
-        tk.Button(load_frame, text="Обзор", command= lambda:load_file, font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+        tk.Button(load_frame, text="Обзор", command=load_file, font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
 
         
         self.root = root
